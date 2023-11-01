@@ -36,13 +36,15 @@
             this.label1 = new System.Windows.Forms.Label();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.formsPlot2 = new ScottPlot.FormsPlot();
+            this.comboBox2 = new System.Windows.Forms.ComboBox();
+            this.comboBox1 = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar2)).BeginInit();
             this.SuspendLayout();
             // 
             // formsPlot1
             // 
-            this.formsPlot1.Location = new System.Drawing.Point(2, 23);
+            this.formsPlot1.Location = new System.Drawing.Point(2, 39);
             this.formsPlot1.Name = "formsPlot1";
             this.formsPlot1.Size = new System.Drawing.Size(671, 601);
             this.formsPlot1.TabIndex = 0;
@@ -95,16 +97,36 @@
             // 
             // formsPlot2
             // 
-            this.formsPlot2.Location = new System.Drawing.Point(667, 23);
+            this.formsPlot2.Location = new System.Drawing.Point(665, 39);
             this.formsPlot2.Name = "formsPlot2";
             this.formsPlot2.Size = new System.Drawing.Size(671, 601);
             this.formsPlot2.TabIndex = 5;
+            // 
+            // comboBox2
+            // 
+            this.comboBox2.FormattingEnabled = true;
+            this.comboBox2.Location = new System.Drawing.Point(440, 12);
+            this.comboBox2.Name = "comboBox2";
+            this.comboBox2.Size = new System.Drawing.Size(267, 21);
+            this.comboBox2.TabIndex = 13;
+            this.comboBox2.SelectedIndexChanged += new System.EventHandler(this.comboBox2_SelectedIndexChanged);
+            // 
+            // comboBox1
+            // 
+            this.comboBox1.FormattingEnabled = true;
+            this.comboBox1.Location = new System.Drawing.Point(55, 12);
+            this.comboBox1.Name = "comboBox1";
+            this.comboBox1.Size = new System.Drawing.Size(267, 21);
+            this.comboBox1.TabIndex = 12;
+            this.comboBox1.SelectedIndexChanged += new System.EventHandler(this.comboBox1_SelectedIndexChanged);
             // 
             // Form2
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1366, 801);
+            this.Controls.Add(this.comboBox2);
+            this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.formsPlot2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.trackBar2);
@@ -130,5 +152,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Timer timer1;
         private ScottPlot.FormsPlot formsPlot2;
+        private System.Windows.Forms.ComboBox comboBox2;
+        private System.Windows.Forms.ComboBox comboBox1;
     }
 }

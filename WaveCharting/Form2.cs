@@ -35,6 +35,8 @@ namespace WaveCharting
 
         double trackBvalue, trackBvalue2;
 
+        int deviceRec, devicePlayOut;
+
         SignalGenerator signalGenerator = new SignalGenerator();
 
         // ------Soundcard init for Record-----------------------------------------------------------
@@ -45,21 +47,24 @@ namespace WaveCharting
         public Form2()
         {
             InitializeComponent();
+        }
 
-            formsPlot1.Plot.Style(ScottPlot.Style.Black);
-            formsPlot2.Plot.Style(ScottPlot.Style.Black);
-
-            // -----Soundcard init for play-
+        // -----Soundcard init for play-----------------------------------------------------------
+        public void initSoundCardOut(int soundDevice)
+        {
             signalGenerator.Type = SignalGeneratorType.Sweep;
             signalGenerator.Frequency = 10;
             signalGenerator.FrequencyEnd = 30000;
             signalGenerator.SweepLengthSecs = 15; // (trackBvalue / 100000) + (trackBvalue2 / 1000);
             waveOut = new WaveOut();
-            waveOut.DeviceNumber = 9;
+            waveOut.DeviceNumber = soundDevice;
+        }
 
-            // -----Soundcard init for - Recording
+        // initSoundCard and buffer for Recording
+        public void initSoundCard(int soundDevice)
+        {
             wi = new WaveIn();
-            wi.DeviceNumber = 12;
+            wi.DeviceNumber = soundDevice;
             wi.WaveFormat = new NAudio.Wave.WaveFormat(SAMPLERATE, 1);
             bwp = new BufferedWaveProvider(wi.WaveFormat);
         }
@@ -146,6 +151,10 @@ namespace WaveCharting
         // Start button
         private void button1_Click(object sender, EventArgs e)
         {
+            //signalGenerator.SweepLengthSecs = (trackBvalue) + (trackBvalue2);
+            //initSoundCard(deviceRec);
+            //initSoundCardOut(devicePlayOut);
+            //waveOut.Dispose();
             vlag1 = true;
             timer1.Interval = 10;
 
@@ -219,6 +228,10 @@ namespace WaveCharting
             }
         }
 
+
+
+
+        //####################################################################################################
         //------------------------------ Hieronder staan de Sliders ----------------------------------------------
 
         private void trackBar1_Scroll(object sender, EventArgs e)
@@ -235,17 +248,45 @@ namespace WaveCharting
 
         private void Form2_Load(object sender, EventArgs e)
         {
-            StreamReader rdl = new StreamReader("TrackBar1Val.TXT");
-            int temp = Convert.ToInt32(rdl.ReadLine());
+            formsPlot1.Plot.Style(ScottPlot.Style.Black);
+            formsPlot2.Plot.Style(ScottPlot.Style.Black);
+
+            for (int i = 0; i < NAudio.Wave.WaveIn.DeviceCount; i++)
+            {
+                var caps = NAudio.Wave.WaveIn.GetCapabilities(i);
+                comboBox2.Items.Add(i + ": " + caps.ProductName);
+            }
+
+            for (int i = 0; i < NAudio.Wave.WaveOut.DeviceCount; i++)
+            {
+                var caps = NAudio.Wave.WaveOut.GetCapabilities(i);
+                comboBox1.Items.Add(i + ": " + caps.ProductName);
+            }
+
+            StreamReader rdl = new StreamReader("deviceRec.TXT");
+            int rec = Convert.ToInt32(rdl.ReadLine());
+            rdl.Close();
+            initSoundCard(rec);
+            comboBox2.SelectedIndex = rec;
+
+
+            StreamReader rdll = new StreamReader("devicePlayOut.TXT");
+            int play = Convert.ToInt32(rdll.ReadLine());
+            rdll.Close();
+            initSoundCardOut(play);
+            comboBox1.SelectedIndex = play;
+
+            StreamReader rdlll = new StreamReader("TrackBar1Val.TXT");
+            int temp = Convert.ToInt32(rdlll.ReadLine());
             trackBvalue = temp / 100000.0;
             trackBar1.Value = temp;
-            rdl.Close();
+            rdlll.Close();
 
-            StreamReader rdll = new StreamReader("TrackBar2Val.TXT");
-            temp = Convert.ToInt32(rdll.ReadLine());
+            StreamReader rdllll = new StreamReader("TrackBar2Val.TXT");
+            temp = Convert.ToInt32(rdllll.ReadLine());
             trackBvalue2 = temp / 100.0;
             trackBar2.Value = temp;
-            rdll.Close();
+            rdllll.Close();
             //signalGenerator.SweepLengthSecs = (trackBvalue ) + (trackBvalue2 );
             signalGenerator.SweepLengthSecs = (trackBvalue) + (trackBvalue2);
             label1.Text = ((trackBvalue ) + (trackBvalue2 )).ToString();
@@ -264,6 +305,63 @@ namespace WaveCharting
             if( (trackBvalue + trackBvalue2) > 0 ) wrl.Write((trackBar2.Value).ToString());
             wrl.Close();
         }
-        
+
+        private void comboBox2_SelectedIndexChanged_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void comboBox1_SelectedIndexChanged_1(object sender, EventArgs e)
+        {
+
+        }
+
+        // ---------------------- SELCTEER SOUNDCARD REC DMV COMBOBOX -----------------------------------------
+        private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                if (comboBox2.SelectedItem != null)
+                {
+                    deviceRec = comboBox2.SelectedIndex;
+                    StreamWriter wrl = new StreamWriter("deviceRec.TXT");
+                    wrl.Write((deviceRec).ToString());
+                    wrl.Close();
+                    initSoundCard(deviceRec);
+                }
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Choose a soundcard device ");
+                //comboBox1.SelectedItem = null;
+            }
+        }
+
+        // ---------------------- SELCTEER SOUNDCARD PLAY DMV COMBOBOX -----------------------------------------
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                if (comboBox1.SelectedItem != null)
+                {
+                    //waveOut.Stop();
+                    //waveOut.Dispose();
+                    devicePlayOut = comboBox1.SelectedIndex;
+                    StreamWriter wrl = new StreamWriter("devicePlayOut.TXT");
+                    wrl.Write((devicePlayOut).ToString());
+                    wrl.Close();
+                    initSoundCardOut(devicePlayOut);
+                    //signalGenerator.SweepLengthSecs = trackBvalue + trackBvalue2;
+                    //waveOut.Play();
+
+                }
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Choose a soundcard device ");
+                //comboBox1.SelectedItem = null;
+            }
+        }
+
     }
 }
