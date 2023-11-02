@@ -32,10 +32,12 @@ namespace WaveCharting
         double[] Ys2;
         double[] Xs; 
         double[] Xs2;
+        //double[] Ys2C;
 
         double trackBvalue, trackBvalue2;
 
         int deviceRec, devicePlayOut;
+        Int32 xLengteFFT;
 
         SignalGenerator signalGenerator = new SignalGenerator();
 
@@ -43,7 +45,7 @@ namespace WaveCharting
         private int SAMPLERATE = 96000; // sample SAMPLERATE of the sound card
         private int BUFFERSIZE = ((int)Math.Pow(2, 15)); // must be a multiple of 2   private int BUFFERSIZE = (int)Math.Pow(2, 11); // must be a multiple of 2
         int BYTES_PER_POINT = 2;
-
+        
         public Form2()
         {
             InitializeComponent();
@@ -68,11 +70,12 @@ namespace WaveCharting
             wi.WaveFormat = new NAudio.Wave.WaveFormat(SAMPLERATE, 1);
             bwp = new BufferedWaveProvider(wi.WaveFormat);
         }
-
+        
 
         // Als er ingangs data beschikbaar is, kom dan hier (callback)
         void WaveIn_DataAvailable(object sender, WaveInEventArgs e)
         {
+            vlag1 = true;
             bwp.AddSamples(e.Buffer, 0, e.BytesRecorded);
 
             var frames = new byte[BUFFERSIZE];
@@ -82,6 +85,8 @@ namespace WaveCharting
 
             if (frames.Length == 0) return;      // frames 4096
 
+            
+
             Ys = new double[frames.Length / BYTES_PER_POINT];
             Xs = new double[frames.Length / BYTES_PER_POINT];
             Ys2 = new double[frames.Length / BYTES_PER_POINT];
@@ -89,6 +94,8 @@ namespace WaveCharting
 
            // vals = new Int32[frames.Length / BYTES_PER_POINT];   // Bytes per point 2
             Int32[] vals = new Int32[frames.Length / BYTES_PER_POINT];
+
+            xLengteFFT = vals.Length;
 
             for (int i = 0; i < vals.Length; i++)
             {
@@ -106,6 +113,47 @@ namespace WaveCharting
             timer1.Enabled = true;
         }
 
+
+
+        // Get the Amplitude for 512 points
+        public double[] SineWaveAmp(double[] amp)
+        {
+
+            double[] wave = new double[amp.Length];
+
+            for (int i = 0; i < amp.Length; i++)
+            {
+
+                //wave[i] = new Complex(amp[i], 0.0); // make it complex format (imaginary = 0)
+                //wave[i] = Math.Abs(amp.Max() - amp.Min());
+            }
+
+            //Accord.Math.FourierTransform.SineWaveAmp(1,1);
+
+            return wave;
+        }
+
+
+        ////////public double[] FFT(double[] amp)
+        ////////{
+
+        ////////    double[] wave = new double[amp.Length];
+        ////////    Complex[] fftComplex = new Complex[data.Length];
+
+        ////////    for (int i = 0; i < amp.Length; i++)
+        ////////    {
+
+        ////////        //wave[i] = new Complex(amp[i], 0.0); // make it complex format (imaginary = 0)
+        ////////        // wave[i] = Math.Abs(amp.Max() - amp.Min());
+        ////////        //wave[i] = amp.Average();
+        ////////        fftComplex[i] = new Complex(amp[i], 0.0);
+        ////////    }
+
+        ////////    //Accord.Math.FourierTransform.SineWaveAmp(1,1);
+
+        ////////    return wave;
+
+        ////////}
 
         public double[] FFT(double[] data)
         {
@@ -155,17 +203,45 @@ namespace WaveCharting
             //initSoundCard(deviceRec);
             //initSoundCardOut(devicePlayOut);
             //waveOut.Dispose();
-            vlag1 = true;
+            //vlag1 = true;
             timer1.Interval = 10;
 
             //waveOut.PlaybackStopped += WaveOut_PlaybackStopped;   // event handler
-            wi.DataAvailable += WaveIn_DataAvailable;    // event handler
+            //wi.DataAvailable += WaveIn_DataAvailable;    // event handler
 
+            if (vlag1 == true)
+            {
+                vlag1 = false;
+                wi.StopRecording();
+                //wi.Dispose();
+            }
+            //initStartUp();
             wi.StartRecording();
 
             waveOut.Init(signalGenerator);
             waveOut.Play();
 
+        }
+
+        double[] Ys2C;
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            //Ys2C = new double[20000];
+            Ys2C = new double[xLengteFFT];
+
+            if (Xs2 != null)
+            {
+                Ys2C = Ys2;
+
+                for (int i = 0; i < xLengteFFT; i++)
+                {
+                    Ys2C[i] = -(Ys2C[i]);
+                    //Debug.Print(Xs2[i].ToString() + "  " + (Ys2C[i]).ToString());
+
+                    //Xs2C[xLengteFFT] = (Int32)Ys2[i];
+                }
+            }
         }
 
 
@@ -177,7 +253,7 @@ namespace WaveCharting
             if (Xs != null)
             {
                 formsPlot1.Plot.Clear();
-                formsPlot1.Plot.SetAxisLimits(0 , (BUFFERSIZE / 1) , -10000, 10000);
+                formsPlot1.Plot.SetAxisLimits(0 , (BUFFERSIZE / 1.5) , -10000, 10000);
                 
                 // disable left-click-drag pan
                 formsPlot1.Configuration.Pan = false;
@@ -219,7 +295,18 @@ namespace WaveCharting
 
                 //formsPlot2.Plot.SetAxisLimits(0, 50, -1, 1000);
                 //Ys = Ys.Take(Ys.Length / 2).ToArray();
+
                 formsPlot2.Plot.SetAxisLimits(-25, 20, -1, 4);
+
+                if (Ys2C != null)
+                {
+                    for (int i = 0; i < xLengteFFT; i++)
+                    {
+                        Ys[i] = (Ys[i]) + (Ys2C[i] + 100);
+                    }
+                }
+
+                    
                 Ys = ScottPlot.Tools.Log10(Ys.Take(Ys.Length / 2).ToArray());
 
                 //formsPlot2.Plot.PlotSignalXY(Xs, Ys, color: System.Drawing.Color.Orange, lineWidth: 1);
@@ -247,6 +334,12 @@ namespace WaveCharting
         }
 
         private void Form2_Load(object sender, EventArgs e)
+        {
+            initStartUp();
+            wi.DataAvailable += WaveIn_DataAvailable;    // event handler
+        }
+
+        private void initStartUp()
         {
             formsPlot1.Plot.Style(ScottPlot.Style.Black);
             formsPlot2.Plot.Style(ScottPlot.Style.Black);
@@ -289,7 +382,7 @@ namespace WaveCharting
             rdllll.Close();
             //signalGenerator.SweepLengthSecs = (trackBvalue ) + (trackBvalue2 );
             signalGenerator.SweepLengthSecs = (trackBvalue) + (trackBvalue2);
-            label1.Text = ((trackBvalue ) + (trackBvalue2 )).ToString();
+            label1.Text = ((trackBvalue) + (trackBvalue2)).ToString();
         }
 
 
@@ -315,6 +408,8 @@ namespace WaveCharting
         {
 
         }
+
+
 
         // ---------------------- SELCTEER SOUNDCARD REC DMV COMBOBOX -----------------------------------------
         private void comboBox2_SelectedIndexChanged(object sender, EventArgs e)
@@ -350,7 +445,7 @@ namespace WaveCharting
                     StreamWriter wrl = new StreamWriter("devicePlayOut.TXT");
                     wrl.Write((devicePlayOut).ToString());
                     wrl.Close();
-                    initSoundCardOut(devicePlayOut);
+                    //initSoundCardOut(devicePlayOut);
                     //signalGenerator.SweepLengthSecs = trackBvalue + trackBvalue2;
                     //waveOut.Play();
 
